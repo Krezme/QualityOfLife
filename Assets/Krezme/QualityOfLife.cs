@@ -186,6 +186,89 @@ namespace Krezme {
                 return 0;
             }
         }
+
+        #region Arcing a Projectile
+
+        public static float GetInitialSpeedToArc(float angle, float gravity, Vector3 projectilePosition, Vector3 targetPosition) {
+            float distance = Vector3.Distance(new Vector3(targetPosition.x, 0, targetPosition.z), new Vector3(projectilePosition.x, 0, projectilePosition.z));
+
+            float verticalDistance = projectilePosition.y - targetPosition.y;
+
+            float radians = GetRadians(angle);
+            //Debug.Log(Mathf.Sqrt(Mathf.Abs((0.5f * Mathf.Abs(gravity) * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(radians) + verticalDistance))));
+            //Debug.Log(Mathf.Sqrt((0.5f * Mathf.Abs(gravity) * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(radians) + verticalDistance)));
+
+            return (1 / Mathf.Cos(radians)) * Mathf.Sqrt(Mathf.Abs((0.5f * Mathf.Abs(gravity) * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(radians) + verticalDistance)));
+        }
+
+        public static float GetRadians(float angle) {
+            return angle * Mathf.Deg2Rad;
+        }
+
+        public static Vector3 GetVector3VelocityToArc(float initialSpeed, float radians) {
+            return new Vector3(0, initialSpeed * Mathf.Sin(radians), initialSpeed * Mathf.Cos(radians));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="normalizedDirection"></param>
+        /// <param name="origin"></param>
+        /// <param name="target"></param>
+        /// <param name="projectileForward"></param>
+        /// <returns></returns>
+        public static float GetAngleBetweenObjects(Vector3 normalizedDirection, Vector3 origin, Vector3 target, Vector3 projectileForward) {
+
+            float angle = Vector3.Angle(normalizedDirection, new Vector3(target.x, 0, target.z) - new Vector3(origin.x, 0, origin.z));
+
+            //!LEARN WHY THIS WORKS AND WHAT DOT AND CROSS DO 
+            if (target.y >= origin.y) {
+                if (Vector3.Dot(Vector3.Cross(normalizedDirection, new Vector3(target.x, 0, target.z) - new Vector3(origin.x, 0, origin.z)), projectileForward) < 0) {
+                    angle = 360 - angle;
+                }
+            }
+            else {
+                if (Vector3.Dot(Vector3.Cross(normalizedDirection, new Vector3(target.x, 0, target.z) - new Vector3(origin.x, 0, origin.z)), projectileForward) > 0) {
+                    angle = 360 - angle;
+                }
+            }
+            
+            return angle;
+        }
+
+        public static float GetTimeToReachDestination(float speed, float distance) {
+            float timeToReachDestination = distance / speed;
+            //float timeToReachDestinationWithGravity = Mathf.Sqrt((2 * distance) / speed);
+        
+            return timeToReachDestination;
+        }
+
+        public static float GetFreeFallingDistance(float time) {
+            float freeFallingDistance = 0.5f * 9.81f * Mathf.Pow(time, 2);
+            //float freeFallingDistance = speed * time + 0.5f * -9.81f * Mathf.Pow(time, 2);
+            return freeFallingDistance;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Calculating the camera's centre point
+        /// </summary>
+        /// <param name="camera">The camera used for the calculation</param>
+        /// <returns>Vector2 of the camera's centre point</returns>
+        public static Vector2 GetCameraCentrePoint(Camera camera){
+            return new Vector2(Screen.width / 2f, Screen.height / 2f);
+        }
+
+        /// <summary>
+        /// Calculating the camera's centre point and converting it to a Ray
+        /// </summary>
+        /// <param name="camera">The camera used for the calculation</param>
+        /// <returns>Ray from the centre of the camera</returns>
+        public static Ray GetCameraCentrePointAsRay(Camera camera){
+            Vector2 screenCenterPoint = new Vector2(Screen.width / 2f, Screen.height / 2f);
+            return camera.ScreenPointToRay(screenCenterPoint);
+        }
     }
 
     public enum Bool3D {
